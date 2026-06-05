@@ -223,6 +223,33 @@
         </exec>
     </target>
 
+    <!-- SCP DEPLOY - использует системную команду scp -->
+    <target name="scp" depends="build" description="Deploy WAR file via SCP">
+        <!-- Загрузка конфигурации деплоя -->
+        <property file="deploy.properties"/>
+
+        <!-- Проверка наличия необходимых свойств -->
+        <fail unless="scp.host" message="scp.host is not defined in deploy.properties"/>
+        <fail unless="scp.username" message="scp.username is not defined in deploy.properties"/>
+        <fail unless="scp.remote.dir" message="scp.remote.dir is not defined in deploy.properties"/>
+
+        <!-- Проверка существования WAR файла -->
+        <available file="${dist.dir}/${war.name}" property="war.exists"/>
+        <fail unless="war.exists" message="WAR file ${dist.dir}/${war.name} not found. Run 'ant build' first."/>
+
+        <echo message="Deploying ${dist.dir}/${war.name} to ${scp.username}@${scp.host}:${scp.remote.dir}/"/>
+
+        <!-- Использование системной команды scp (работает на macOS/Linux) -->
+        <exec executable="scp" failonerror="true">
+            <arg value="-P"/>
+            <arg value="${scp.port}"/>
+            <arg value="${dist.dir}/${war.name}"/>
+            <arg value="${scp.username}@${scp.host}:${scp.remote.dir}/"/>
+        </exec>
+
+        <echo message="Deployment completed successfully!"/>
+    </target>
+
     <!--  RUN THE SCRIPT  -->
     <target name="all">
         <trycatch property="error.occurred">
