@@ -43,3 +43,5 @@ build/
 
 build
 dist
+
+deploy.properties
