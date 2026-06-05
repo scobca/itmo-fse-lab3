@@ -1,35 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <project name="Lab3Ant" default="all">
 
-    <!-- properties -->
     <property file="build.properties"/>
     <property environment="env"/>
+
     <condition property="java21.home" value="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" else="/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home">
         <available file="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"/>
     </condition>
 
-    <!--    try-catch ant lib-->
     <taskdef resource="net/sf/antcontrib/antlib.xml">
         <classpath>
             <pathelement location="${lib.dir}/ant-contrib-1.0b3.jar"/>
         </classpath>
     </taskdef>
 
-    <!-- classpath -->
     <path id="project.classpath">
         <fileset dir="${lib.dir}">
             <include name="*.jar"/>
         </fileset>
     </path>
 
-    <!-- CLEAN -->
     <target name="clean">
         <delete dir="${build.dir}"/>
         <delete dir="${dist.dir}"/>
     </target>
 
-    <!-- COMPILE -->
     <target name="compile">
         <mkdir dir="${classes.dir}"/>
         <javac
@@ -43,13 +38,20 @@
             <classpath refid="project.classpath"/>
         </javac>
 
-        <!-- copy resources -->
         <copy todir="${classes.dir}">
             <fileset dir="${resources.dir}"/>
         </copy>
     </target>
 
-    <!-- BUILD -->
+    <target name="native2ascii" description="Конвертация файлов локализации">
+        <mkdir dir="${classes.dir}"/>
+        <native2ascii src="${resources.dir}"
+                      dest="${classes.dir}"
+                      includes="**/*.properties"
+                      ext=".properties"
+                      encoding="UTF-8"/>
+    </target>
+
     <target name="build" depends="compile">
         <mkdir dir="${dist.dir}"/>
         <war
@@ -57,23 +59,47 @@
                 webxml="${web.dir}/WEB-INF/web.xml"
                 manifest="${manifest.file}">
 
-            <!-- web resources -->
             <fileset dir="${web.dir}"/>
 
-            <!-- compiled classes -->
             <classes dir="${classes.dir}"/>
 
-            <!-- libraries -->
             <lib dir="${lib.dir}"/>
         </war>
     </target>
 
-    <!-- TEST -->
+    <target name="doc" depends="compile" description="Генерация Javadoc и обновление MANIFEST.MF">
+        <mkdir dir="${build.dir}/javadoc"/>
+
+        <javadoc sourcepath="${src.dir}"
+                 destdir="${build.dir}/javadoc"
+                 encoding="UTF-8"
+                 docencoding="UTF-8"
+                 charset="UTF-8">
+            <classpath refid="project.classpath"/>
+        </javadoc>
+
+        <jar destfile="${dist.dir}/javadoc.jar" basedir="${build.dir}/javadoc"/>
+
+        <checksum algorithm="MD5" totalproperty="md5.total">
+            <fileset dir="${classes.dir}"/>
+        </checksum>
+        <checksum algorithm="SHA-1" totalproperty="sha1.total">
+            <fileset dir="${classes.dir}"/>
+        </checksum>
+
+        <manifest file="${manifest.file}">
+            <attribute name="Manifest-Version" value="1.0"/>
+            <attribute name="App-Version" value="1.0-SNAPSHOT"/>
+            <attribute name="Main-Class" value="org.example.misc.CenteredSplash"/>
+            <attribute name="Project-MD5-Digest" value="${md5.total}"/>
+            <attribute name="Project-SHA1-Digest" value="${sha1.total}"/>
+        </manifest>
+    </target>
+
     <target name="test" depends="build">
         <mkdir dir="${test.classes.dir}"/>
         <mkdir dir="${build.dir}/test-reports"/>
 
-        <!-- compile tests with Java 21 -->
         <javac srcdir="${test.dir}"
                destdir="${test.classes.dir}"
                includeantruntime="false"
@@ -87,14 +113,13 @@
             </classpath>
         </javac>
 
-        <!-- run tests with Java 21 -->
         <junit printsummary="yes"
                haltonfailure="yes"
                fork="yes"
                showoutput="true"
-               jvm="${java21.home}/bin/java"> <!-- Указываем JVM -->
+               jvm="${java21.home}/bin/java">
 
-            <jvmarg value="-XX:+EnableDynamicAgentLoading"/> <!-- Для подавления предупреждений -->
+            <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
 
             <classpath>
                 <path refid="project.classpath"/>
@@ -113,7 +138,70 @@
         </junit>
     </target>
 
-    <!-- MUSIC -->
+    <target name="env" depends="build, compile-splash" description="Сборка и запуск в альтернативном окружении">
+        <echo message="=== Запуск в альтернативном окружении ==="/>
+        <echo message="Java Home: ${env.java.home}"/>
+        <echo message="JVM Args: ${env.jvm.args}"/>
+
+        <java classname="org.example.misc.CenteredSplash" fork="true" jvm="${env.java.home}/bin/java">
+            <classpath>
+                <path refid="project.classpath"/>
+                <pathelement path="${test.classes.dir}"/>
+            </classpath>
+            <jvmarg line="${env.jvm.args}"/>
+            <arg value="src/test/assets/images/${image.success.file}"/>
+            <arg value="--auto-close"/>
+            <arg value="2000"/>
+        </java>
+    </target>
+
+    <target name="alt" description="Создание альтернативной версии с измененными именами">
+        <echo message="=== Создание ALT версии ==="/>
+        <property name="alt.src.dir" value="${build.dir}/alt-src"/>
+        <mkdir dir="${alt.src.dir}"/>
+
+        <copy todir="${alt.src.dir}">
+            <fileset dir="${src.dir}"/>
+            <filterchain>
+                <replaceregex pattern="${alt.regex.pattern}" replace="${alt.regex.replace}" flags="g"/>
+            </filterchain>
+        </copy>
+
+        <move file="${alt.src.dir}/org/example/beans/PointBean.java"
+              tofile="${alt.src.dir}/org/example/beans/AltPointBean.java"
+              failonerror="false"/>
+
+        <antcall target="build">
+            <param name="src.dir" value="${alt.src.dir}"/>
+            <param name="war.name" value="lab3-alt.war"/>
+        </antcall>
+    </target>
+
+    <target name="team" description="Сборка двух предыдущих ревизий">
+        <echo message="=== Сборка предыдущих ревизий (TEAM) ==="/>
+        <mkdir dir="${build.dir}/team-archives"/>
+
+        <exec executable="git" outputproperty="team.original.branch">
+            <arg line="branch --show-current"/>
+        </exec>
+
+        <exec executable="git" outputproperty="team.rev1"><arg line="rev-parse HEAD~1"/></exec>
+        <exec executable="git" outputproperty="team.rev2"><arg line="rev-parse HEAD~2"/></exec>
+
+        <exec executable="git"><arg line="checkout ${team.rev1}"/></exec>
+        <antcall target="build"><param name="war.name" value="lab3-rev1.war"/></antcall>
+        <copy file="${dist.dir}/lab3-rev1.war" todir="${build.dir}/team-archives" failonerror="false"/>
+
+        <exec executable="git"><arg line="checkout ${team.rev2}"/></exec>
+        <antcall target="build"><param name="war.name" value="lab3-rev2.war"/></antcall>
+        <copy file="${dist.dir}/lab3-rev2.war" todir="${build.dir}/team-archives" failonerror="false"/>
+
+        <exec executable="git"><arg line="checkout ${team.original.branch}"/></exec>
+
+        <zip destfile="${dist.dir}/team-builds.zip" basedir="${build.dir}/team-archives"/>
+        <echo message="Архив team-builds.zip успешно создан в папке dist/"/>
+    </target>
+
     <target name="music">
         <trycatch property="error.occurred">
             <try>
@@ -128,7 +216,6 @@
         </trycatch>
     </target>
 
-    <!-- COMPILE SPLASH -->
     <target name="compile-splash">
         <mkdir dir="${test.classes.dir}"/>
         <javac srcdir="${test.dir}"
@@ -142,7 +229,6 @@
         </javac>
     </target>
 
-    <!-- SPLASH IMAGE -->
     <target name="show-splash" depends="compile-splash">
         <condition
                 property="image"
@@ -156,7 +242,6 @@
                 else="5000">
             <isset property="error.occurred"/>
         </condition>
-        <!-- Запускаем Java-программу для показа изображения -->
         <java classname="org.example.misc.CenteredSplash" fork="true" spawn="true">
             <classpath location="build/test-classes"/>
             <arg value="src/test/assets/images/${image}"/>
@@ -165,7 +250,6 @@
         </java>
     </target>
 
-    <!-- RESULT SOUNDTRACK -->
     <target name="result-soundtrack">
         <condition
                 property="music"
@@ -182,7 +266,6 @@
 
         <echo message="${message}"/>
 
-        <!-- Windows -->
         <exec executable="cmd" osfamily="windows" spawn="true">
             <arg value="/c"/>
             <arg value="start"/>
@@ -190,7 +273,6 @@
             <arg value="src/test/assets/music/${music}"/>
         </exec>
 
-        <!-- macOS -->
         <exec executable="afplay" osfamily="mac" spawn="true">
             <arg value="src/test/assets/music/${music}"/>
         </exec>
@@ -252,7 +334,6 @@
         </exec>
     </target>
 
-    <!-- DIFF -->
     <target name="diff">
         <exec executable="git"
               outputproperty="git.diff">
@@ -278,9 +359,7 @@
         </if>
     </target>
 
-    <!-- GIT COMMIT -->
-    <target name="git-commit"
-            if="need.commit">
+    <target name="git-commit" if="need.commit">
         <exec executable="git">
             <arg value="add"/>
             <arg value="."/>
@@ -292,7 +371,6 @@
         </exec>
     </target>
 
-    <!-- SCP  -->
     <target name="scp" depends="build" description="Deploy WAR file via SCP">
         <property file="deploy.properties"/>
 
@@ -315,7 +393,6 @@
         <echo message="Deployment completed successfully!"/>
     </target>
 
-    <!-- XML -->
     <target name="xml" description="Validate all XML files">
         <echo message="=== Validating XML files ==="/>
 
@@ -333,7 +410,6 @@
         <echo message="=== XML validation complete ==="/>
     </target>
 
-    <!-- REPORT -->
     <target name="report" depends="test" description="Commit test reports to Git">
         <echo message="=== Committing JUnit Reports to Git ==="/>
 
@@ -341,18 +417,15 @@
             <format property="now" pattern="yyyy-MM-dd HH:mm:ss"/>
         </tstamp>
 
-        <!-- Копируем отчеты из build в корень проекта -->
         <copy todir="test-reports" failonerror="false">
             <fileset dir="${build.dir}/test-reports" includes="TEST-*.xml"/>
         </copy>
 
-        <!-- Добавляем в Git -->
         <exec executable="git" dir="." failonerror="false">
             <arg value="add"/>
             <arg value="test-reports/*.xml"/>
         </exec>
 
-        <!-- Коммитим -->
         <exec executable="git" dir="." failonerror="false">
             <arg value="commit"/>
             <arg value="-m"/>
@@ -362,7 +435,6 @@
         <echo message="Test reports committed to Git"/>
     </target>
 
-    <!--  RUN THE SCRIPT  -->
     <target name="all">
         <trycatch property="error.occurred">
             <try>

@@ -1,3 +1,8 @@
 Manifest-Version: 1.0
-Implementation-Version: 1.0
-Built-By: Ant
+Ant-Version: Apache Ant 1.10.17
+Created-By: 21.0.4+7-LTS (Eclipse Adoptium)
+App-Version: 1.0-SNAPSHOT
+Main-Class: org.example.misc.CenteredSplash
+Project-MD5-Digest: b118555bf48e3cdfec43429dada1b259
+Project-SHA1-Digest: 01571bb3e1c37ae9ca2af69da4c51dc12d358ae6
+
