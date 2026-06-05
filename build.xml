@@ -4,6 +4,10 @@
 
     <!-- properties -->
     <property file="build.properties"/>
+    <property environment="env"/>
+    <condition property="java21.home" value="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" else="/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home">
+        <available file="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"/>
+    </condition>
 
     <!--    try-catch ant lib-->
     <taskdef resource="net/sf/antcontrib/antlib.xml">
@@ -69,28 +73,37 @@
         <mkdir dir="${test.classes.dir}"/>
         <mkdir dir="${build.dir}/test-reports"/>
 
-        <!-- compile tests -->
-        <javac
-                srcdir="${test.dir}"
-                destdir="${test.classes.dir}"
-                includeantruntime="false">
+        <!-- compile tests with Java 21 -->
+        <javac srcdir="${test.dir}"
+               destdir="${test.classes.dir}"
+               includeantruntime="false"
+               fork="true"
+               source="17"
+               target="17"
+               executable="${java21.home}/bin/javac">
             <classpath>
                 <path refid="project.classpath"/>
                 <pathelement path="${classes.dir}"/>
             </classpath>
-
         </javac>
 
-        <!-- run tests -->
+        <!-- run tests with Java 21 -->
         <junit printsummary="yes"
-               haltonfailure="yes">
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="true"
+               jvm="${java21.home}/bin/java"> <!-- Указываем JVM -->
+
+            <jvmarg value="-XX:+EnableDynamicAgentLoading"/> <!-- Для подавления предупреждений -->
+
             <classpath>
                 <path refid="project.classpath"/>
                 <pathelement path="${classes.dir}"/>
                 <pathelement path="${test.classes.dir}"/>
             </classpath>
 
-            <formatter type="plain" usefile="true"/>
+            <formatter type="xml" usefile="true"/>
+            <formatter type="plain" usefile="false"/>
 
             <batchtest todir="${build.dir}/test-reports">
                 <fileset dir="${test.classes.dir}">
@@ -262,6 +275,35 @@
         </xmlvalidate>
 
         <echo message="=== XML validation complete ==="/>
+    </target>
+
+    <!-- REPORT -->
+    <target name="report" depends="test" description="Commit test reports to Git">
+        <echo message="=== Committing JUnit Reports to Git ==="/>
+
+        <tstamp>
+            <format property="now" pattern="yyyy-MM-dd HH:mm:ss"/>
+        </tstamp>
+
+        <!-- Копируем отчеты из build в корень проекта -->
+        <copy todir="test-reports" failonerror="false">
+            <fileset dir="${build.dir}/test-reports" includes="TEST-*.xml"/>
+        </copy>
+
+        <!-- Добавляем в Git -->
+        <exec executable="git" dir="." failonerror="false">
+            <arg value="add"/>
+            <arg value="test-reports/*.xml"/>
+        </exec>
+
+        <!-- Коммитим -->
+        <exec executable="git" dir="." failonerror="false">
+            <arg value="commit"/>
+            <arg value="-m"/>
+            <arg value="Test reports - ${now}"/>
+        </exec>
+
+        <echo message="Test reports committed to Git"/>
     </target>
 
     <!--  RUN THE SCRIPT  -->
