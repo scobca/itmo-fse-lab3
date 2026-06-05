@@ -2,25 +2,23 @@
 <persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence"
              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
-                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd"
-             version="2.1">
+                                 http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
+             version="2.2">
 
     <persistence-unit name="HitPU" transaction-type="JTA">
         <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
 
-        <!-- JNDI datasource из standalone.xml -->
-        <jta-data-source>java:jboss/datasources/DerbyEmbeddedDS</jta-data-source>
+        <jta-data-source>java:jboss/datasources/ExampleDS</jta-data-source>
 
-        <!-- Entity-классы -->
         <class>org.example.beans.PointResult</class>
 
         <properties>
-            <property name="hibernate.dialect" value="org.hibernate.dialect.DerbyTenSevenDialect"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+
             <property name="hibernate.hbm2ddl.auto" value="update"/>
+
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
-            <property name="hibernate.transaction.jta.platform"
-                      value="org.hibernate.engine.transaction.jta.platform.internal.JBossAppServerJtaPlatform"/>
         </properties>
     </persistence-unit>
 </persistence>
