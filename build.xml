@@ -196,6 +196,62 @@
         </exec>
     </target>
 
+    <target name="history">
+        <exec executable="git" outputproperty="git.head_revision">
+            <arg line="rev-parse HEAD"/>
+        </exec>
+        <exec executable="git" outputproperty="git.tail_revision">
+            <arg line="rev-list --max-parents=0 HEAD"/>
+        </exec>
+
+        <echo message="Head revision: ${git.head_revision}"/>
+        <echo message="Tail revision: ${git.tail_revision}"/>
+
+        <var name="git.new_revision" unset="true"/>
+        <exec executable="git" outputproperty="git.new_revision">
+            <arg line="rev-parse HEAD~1"/>
+        </exec>
+
+        <trycatch>
+            <try>
+                <antcall target="compile"/>
+                <var name="compile.successful" unset="true"/>
+                <property name="compile.successful" value="true"/>
+                <echo message="Project compiled successfully!"/>
+
+                <sequential>
+                    <exec executable="git" outputproperty="diff_output">
+                        <arg line="diff ${git.head_revision} ${git.new_revision}"/>
+                    </exec>
+                    <echo file="diff_output.txt" message="${diff_output}"/>
+                </sequential>
+
+            </try>
+            <catch>
+                <echo message="Project compilation failed!"/>
+                <echo message="Checkout revision: ${git.new_revision}"/>
+                <exec executable="git" dir="${project.dir}">
+                    <arg line="reset --hard ${git.new_revision}"/>
+                </exec>
+                <var name="compile.successful" unset="true"/>
+                <property name="compile.successful" value="false"/>
+                <if>
+                    <equals arg1="${git.new_revision}" arg2="${git.tail_revision}"/>
+                    <then>
+                        <echo message="No more revisions to checkout"/>
+                    </then>
+                    <else>
+                        <runtarget target="history"/>
+                    </else>
+                </if>
+            </catch>
+        </trycatch>
+
+        <exec executable="git" dir="${project.dir}">
+            <arg line="checkout ${git.head_revision}"/>
+        </exec>
+    </target>
+
     <!-- DIFF -->
     <target name="diff">
         <exec executable="git"
