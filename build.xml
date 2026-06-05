@@ -246,6 +246,24 @@
         <echo message="Deployment completed successfully!"/>
     </target>
 
+    <!-- XML -->
+    <target name="xml" description="Validate all XML files">
+        <echo message="=== Validating XML files ==="/>
+
+        <xmlvalidate file="build.xml" failonerror="true" lenient="true"/>
+        <echo message="build.xml is well-formed"/>
+
+        <xmlvalidate file="${web.dir}/WEB-INF/web.xml" failonerror="false" lenient="true"/>
+        <echo message="web.xml validation attempted"/>
+
+        <xmlvalidate failonerror="false" lenient="true">
+            <fileset dir="." includes="**/*.xml"
+                     excludes="build.xml, **/build/** , **/dist/** , **/target/** , **/.idea/** , **/*.iml"/>
+        </xmlvalidate>
+
+        <echo message="=== XML validation complete ==="/>
+    </target>
+
     <!--  RUN THE SCRIPT  -->
     <target name="all">
         <trycatch property="error.occurred">
