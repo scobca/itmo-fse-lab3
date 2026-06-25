@@ -44,5 +44,6 @@ build/
 build
 dist
 out
+.idea
 
 deploy.properties
