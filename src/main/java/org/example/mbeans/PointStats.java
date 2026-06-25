@@ -30,6 +30,8 @@ public class PointStats extends NotificationBroadcasterSupport implements PointS
             );
 
             sendNotification(notification);
+            System.out.println("Сообщение отправлено.");
+
             resetMissSequence();
         }
     }

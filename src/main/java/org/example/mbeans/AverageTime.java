@@ -44,6 +44,7 @@ public class AverageTime extends NotificationBroadcasterSupport implements Avera
                         averageTime, clickCount)
         );
         sendNotification(notification);
+        System.out.println("Сообщение отправлено.");
     }
 
     public synchronized void reset() {
