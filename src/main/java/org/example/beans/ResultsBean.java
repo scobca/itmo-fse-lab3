@@ -1,5 +1,8 @@
 package org.example.beans;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.SessionScoped;
 import javax.inject.Inject;
@@ -12,9 +15,11 @@ import java.util.List;
 @SessionScoped
 public class ResultsBean implements Serializable {
 
+    @Setter
     @Inject
     private PointResultRepository repository;
 
+    @Getter
     private List<PointResult> results;
 
     @PostConstruct
@@ -36,11 +41,4 @@ public class ResultsBean implements Serializable {
         results.clear();
     }
 
-    public List<PointResult> getResults() {
-        return results;
-    }
-
-    public void setRepository(PointResultRepository repository) {
-        this.repository = repository;
-    }
 }

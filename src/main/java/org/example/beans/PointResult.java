@@ -1,10 +1,15 @@
 package org.example.beans;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 
+@Setter
+@Getter
 @Entity
 @Table(name = "point_results")
 public class PointResult implements Serializable {
@@ -34,58 +39,4 @@ public class PointResult implements Serializable {
         this.processingTime = processingTime;
     }
 
-    // Геттеры и сеттеры
-    public Long getId() { return id; }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Double getX() {
-        return x;
-    }
-
-    public void setX(Double x) {
-        this.x = x;
-    }
-
-    public Double getY() {
-        return y;
-    }
-
-    public void setY(Double y) {
-        this.y = y;
-    }
-
-    public Double getR() {
-        return r;
-    }
-
-    public void setR(Double r) {
-        this.r = r;
-    }
-
-    public Boolean getHit() {
-        return hit;
-    }
-
-    public void setHit(Boolean hit) {
-        this.hit = hit;
-    }
-
-    public LocalDateTime   getServerTime() {
-        return serverTime;
-    }
-
-    public void setServerTime(LocalDateTime   serverTime) {
-        this.serverTime = serverTime;
-    }
-
-    public Double getProcessingTime() {
-        return processingTime;
-    }
-
-    public void setProcessingTime(Double processingTime) {
-        this.processingTime = processingTime;
-    }
 }
