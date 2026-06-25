@@ -10,19 +10,32 @@ import javax.management.NotificationBroadcasterSupport;
 public class AverageTime extends NotificationBroadcasterSupport implements IAverageTime {
 
     private double averageTime = 0.0;
-    private long lastClickTime = 0;
+    private Long lastClickTime = null;
     private int clickCount = 0;
     private long totalTime = 0;
     private long sequenceNumber = 1;
-    private final int NOTIFICATION_THRESHOLD = 10; // оповещение после 10 кликов
 
-    public synchronized void addClick(long currentTime) {
-        updateStats(currentTime - lastClickTime);
-
-        if (lastClickTime == 0) {
-            lastClickTime = currentTime;
+    public synchronized void addClick(long currentTimeMillis) {
+        if (lastClickTime == null) {
+            lastClickTime = currentTimeMillis;
+            System.out.println("First click recorded at: " + currentTimeMillis);
             return;
-        } else lastClickTime = currentTime;
+        }
+
+        long interval = currentTimeMillis - lastClickTime;
+
+        if (interval < 0) {
+            System.err.println("Negative interval detected: " + interval + " ms. Resetting.");
+            lastClickTime = currentTimeMillis;
+            return;
+        }
+
+        lastClickTime = currentTimeMillis;
+        clickCount++;
+        totalTime += interval;
+        averageTime = (double) totalTime / clickCount;
+
+        System.out.println("Click " + clickCount + ": interval = " + interval + " ms, average = " + averageTime + " ms");
 
         Notification notification = new Notification(
                 "averageTime.calculated",
@@ -34,17 +47,11 @@ public class AverageTime extends NotificationBroadcasterSupport implements IAver
         sendNotification(notification);
     }
 
-    private void updateStats(long interval) {
-        clickCount++;
-        totalTime += interval;
-        averageTime = (double) totalTime / clickCount;
-    }
-
-    @Override
-    public void reset() {
+    public synchronized void reset() {
         averageTime = 0.0;
-        lastClickTime = 0;
+        lastClickTime = null;
         clickCount = 0;
         totalTime = 0;
+        System.out.println("AverageTime statistics reset");
     }
 }
