@@ -1,13 +1,12 @@
 package org.example.mbeans;
 
 import lombok.Getter;
-import org.example.mbeans.interfaces.IPointStats;
 
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
 
 @Getter
-public class PointStats extends NotificationBroadcasterSupport implements IPointStats {
+public class PointStats extends NotificationBroadcasterSupport implements PointStatsMBean {
 
     private int totalPoints = 0;
     private int missPoints = 0;

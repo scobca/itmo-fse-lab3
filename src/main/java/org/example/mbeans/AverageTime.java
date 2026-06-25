@@ -1,13 +1,12 @@
 package org.example.mbeans;
 
 import lombok.Getter;
-import org.example.mbeans.interfaces.IAverageTime;
 
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
 
 @Getter
-public class AverageTime extends NotificationBroadcasterSupport implements IAverageTime {
+public class AverageTime extends NotificationBroadcasterSupport implements AverageTimeMBean {
 
     private double averageTime = 0.0;
     private Long lastClickTime = null;
