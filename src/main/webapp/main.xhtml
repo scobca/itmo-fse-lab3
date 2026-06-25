@@ -429,11 +429,10 @@
                 </h:commandButton>
 
                 <!-- СТАТИСТИКА MBeans -->
-                <div class="mbean-stats" id="mbeanStats">
+                <h:panelGroup id="mbeanStats" layout="block" styleClass="mbean-stats">
                     <h3>Статистика MBeans</h3>
 
-                    <!-- Статистика PointStats -->
-                    <div style="margin-bottom: 15px;">
+                    <h:panelGroup layout="block" style="margin-bottom: 15px;">
                         <h4 style="color: #333; margin: 5px 0;">Точки (PointStats)</h4>
                         <div class="stat-row">
                             <span class="stat-label">Всего точек:</span>
@@ -445,14 +444,11 @@
                         </div>
                         <div class="stat-row">
                             <span class="stat-label">Процент попаданий:</span>
-                            <span class="stat-value" style="color: #333;">
-                                #{mbeanStatsBean.hitPercentage}%
-                            </span>
+                            <span class="stat-value" style="color: #333;"> #{mbeanStatsBean.hitPercentage}% </span>
                         </div>
-                    </div>
+                    </h:panelGroup>
 
-                    <!-- Статистика AverageTime -->
-                    <div>
+                    <h:panelGroup layout="block">
                         <h4 style="color: #333; margin: 5px 0;">Время (AverageTime)</h4>
                         <div class="stat-row">
                             <span class="stat-label">Среднее время между кликами:</span>
@@ -462,8 +458,8 @@
                             <span class="stat-label">Количество кликов:</span>
                             <span class="stat-value">#{mbeanStatsBean.clickCount}</span>
                         </div>
-                    </div>
-                </div>
+                    </h:panelGroup>
+                </h:panelGroup>
 
                 <!-- Таблица со списком результатов предыдущих проверок. -->
                 <h:dataTable id="resultsTable"
