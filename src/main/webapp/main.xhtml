@@ -12,6 +12,7 @@
             font-family: sans-serif;
             color: black;
         }
+
         #header {
             font-family: monospace;
             color: blue;
@@ -33,7 +34,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            align-items: flex-start; // чтобы не прижималось вправо
+            align-items: flex-start;
             padding: 20px;
             box-sizing: border-box;
         }
@@ -71,15 +72,63 @@
             border-collapse: collapse;
             width: 100%;
         }
+
         th, td {
             padding: 10px;
             border: 1px solid black;
             text-align: center;
         }
-        #returnForm{
+
+        #returnForm {
             text-align: center;
             margin-top: 30px;
             padding: 20px;
+        }
+
+        /* Стили для счетчиков MBean */
+        .mbean-stats {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .mbean-stats h3 {
+            margin-top: 0;
+            color: #333;
+            padding-bottom: 10px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .stat-value {
+            color: #333;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .stat-value.miss {
+            color: #333;
+        }
+
+        .stat-value.average-time {
+            color: #333;
         }
 
     </style>
@@ -89,206 +138,206 @@
 
     <div class="container">
         <div id="leftPart">
-            <!-- Динамически обновляемую картинку, изображающую
-                область на координатной плоскости в соответствии с
-                номером варианта и точки, координаты которых были заданы
-                пользователем. Клик по картинке должен инициировать сценарий,
-                осуществляющий определение координат новой точки и отправку
-                их на сервер для проверки её попадания в область. Цвет точек
-                должен зависить от факта попадания / непопадания в область.
-                Смена радиуса также должна инициировать перерисовку картинки. -->
             <h:form id="canvasForm">
-                <canvas id="graph" height="500" width="500" style="border:1px solid black; height: 500px; width: 500px;"></canvas>
+                <canvas id="graph" height="500" width="500"
+                        style="border:1px solid black; height: 500px; width: 500px;">
 
-                    <h:inputHidden id="xCanvas" value="#{pointBean.x}" />
-                    <h:inputHidden id="yCanvas" value="#{pointBean.y}" />
-                    <h:inputHidden id="rCanvas" value="#{pointBean.r}" />
+                </canvas>
 
-                    <h:commandButton id="canvasSubmit"
-                                     style="display:none"
-                                     action="#{pointBean.submit}">
-                        <f:ajax execute="@form" render="inputForm:resultsTable inputForm:pointsScript" />
-                    </h:commandButton>
+                <h:inputHidden id="xCanvas" value="#{pointBean.x}"/>
+                <h:inputHidden id="yCanvas" value="#{pointBean.y}"/>
+                <h:inputHidden id="rCanvas" value="#{pointBean.r}"/>
+
+                <h:commandButton id="canvasSubmit"
+                                 style="display:none"
+                                 action="#{pointBean.submit}">
+                    <f:ajax execute="@form"
+                            render="inputForm:resultsTable inputForm:pointsScript mbeanStats inputForm:mbeanStats"/>
+                </h:commandButton>
+
                 <script>
                     //<![CDATA[
-                        const canvas = document.getElementById('graph');
-                        const ctx = canvas.getContext('2d');
+                    const canvas = document.getElementById('graph');
+                    const ctx = canvas.getContext('2d');
 
-                        const width = canvas.width;
-                        const height = canvas.height;
+                    const width = canvas.width;
+                    const height = canvas.height;
 
-                        let fakeR = false;
+                    let fakeR = false;
 
 
-                        function drawPoint(x, y, r) {
-                            let cx = canvas.width / 2;
-                            let cy = canvas.height / 2;
-                            let scale = (cx - 25) / r;
+                    function drawPoint(x, y, r) {
+                        let cx = canvas.width / 2;
+                        let cy = canvas.height / 2;
+                        let scale = (cx - 25) / r;
 
-                            if ((x <= 0 && y <= 0 && y >= -x - r) ||
-                                (x >= 0 && y >= 0 && x <= r && y <= r / 2) ||
-                                (x >= 0 && y <= 0 && (x * x + y * y <= r * r / 4))) {
-                                ctx.fillStyle = 'green';
-                            } else {
-                                ctx.fillStyle = 'red';
-                            }
-
-                            ctx.beginPath();
-                            ctx.arc(cx + scale * x, cy - scale * y, 5, 0, Math.PI * 2, true);
-                            ctx.fill();
-                            ctx.closePath();
+                        if ((x <= 0 && y <= 0 && y >= -x - r) ||
+                            (x >= 0 && y >= 0 && x <= r && y <= r / 2) ||
+                            (x >= 0 && y <= 0 && (x * x + y * y <= r * r / 4))) {
+                            ctx.fillStyle = 'green';
+                        } else {
+                            ctx.fillStyle = 'red';
                         }
 
+                        ctx.beginPath();
+                        ctx.arc(cx + scale * x, cy - scale * y, 5, 0, Math.PI * 2, true);
+                        ctx.fill();
+                        ctx.closePath();
+                    }
 
-                        function handleCanvasClick(event){
-                            let rect = canvas.getBoundingClientRect();
 
-                            let cx = canvas.width / 2;
-                            let cy = canvas.height / 2;
+                    function handleCanvasClick(event) {
+                        let rect = canvas.getBoundingClientRect();
 
-                            let clickX = (event.clientX - rect.left)/((rect.right-rect.left)/2)*cx;
-                            let clickY = (event.clientY - rect.top)/((rect.bottom-rect.top)/2)*cy;
+                        let cx = canvas.width / 2;
+                        let cy = canvas.height / 2;
 
+                        let clickX = (event.clientX - rect.left) / ((rect.right - rect.left) / 2) * cx;
+                        let clickY = (event.clientY - rect.top) / ((rect.bottom - rect.top) / 2) * cy;
+
+                        if (fakeR) {
+                            alert("Сначала выберите значение r!");
+                            return;
+                        }
+
+                        let r = parseFloat(document.getElementById("inputForm:r").value);
+
+
+                        let scale = (cx - 25) / r;
+                        let x = (clickX - cx) / scale;
+                        let y = (cy - clickY) / scale;
+
+                        // Округлим на всякий
+                        let xRounded = Math.round(x * 100) / 100;
+                        let yRounded = Math.round(y * 100) / 100;
+
+                        // рисуем-с
+                        drawPoint(xRounded, yRounded, r);
+
+                        // заполняем форму
+                        var form = document.getElementById("canvasForm");
+                        form["canvasForm:xCanvas"].value = xRounded;
+                        form["canvasForm:yCanvas"].value = yRounded;
+                        form["canvasForm:rCanvas"].value = r;
+
+                        // и отправляем
+                        document.getElementById("canvasForm:canvasSubmit").click();
+                    }
+
+                    function updateGraph(R) {
+                        let cx = canvas.width / 2;
+                        let cy = canvas.height / 2;
+                        R = Number(R);
+                        fakeR = false;
+                        if (isNaN(R)) {
+                            R = 1;
+                            fakeR = true;
+                        }
+                        let scale = (cx - 25) / R;
+                        ctx.clearRect(0, 0, width, height);
+                        ctx.strokeStyle = 'black';
+                        ctx.lineWidth = 1;
+                        ctx.closePath();
+                        ctx.fillStyle = 'blue';
+                        // Треугольник
+                        ctx.beginPath();
+                        ctx.moveTo(cx, cy);
+                        ctx.lineTo(cx - R * scale, cy);
+                        ctx.lineTo(cx, cy + R * scale);
+                        ctx.closePath();
+                        ctx.fill();
+                        // квадрат
+                        ctx.fillRect(cx, cy, R * scale, -R / 2 * scale);
+                        // четверть-круг
+                        ctx.beginPath();
+                        ctx.arc(cx, cy, R / 2 * scale, 0, Math.PI / 2, false);
+                        ctx.lineTo(cx, cy);
+                        ctx.fill();
+                        ctx.closePath();
+                        // Оси
+                        ctx.beginPath();
+                        ctx.moveTo(0, cy);
+                        ctx.lineTo(width, cy); // X
+                        ctx.moveTo(cx, 0);
+                        ctx.lineTo(cy, height); // Y
+                        ctx.stroke();
+                        // Деления шкалы
+                        ctx.fillStyle = 'black';
+                        if (fakeR) {
+                            for (let i = -2 * R; i <= 2 * R; i++) {
+                                if (i === 0) continue;
+                                ctx.fillRect(cx + i * scale / 2 - 1, cy - 3, 2, 6);
+                                ctx.fillRect(cx - 3, cy - i * scale / 2 - 1, 6, 2);
+                                ctx.fillText(i / 2 + "R", cx + i * scale / 2 - 10, cy + 15);
+                                ctx.fillText(i / 2 + "R", cx + 10, cy - i * scale / 2 + 3);
+                            }
+                        } else {
+                            for (let i = -2 * R; i <= 2 * R; i++) {
+                                if (i === 0) continue;
+                                ctx.fillRect(cx + i * scale / 2 - 1, cy - 3, 2, 6);
+                                ctx.fillRect(cx - 3, cy - i * scale / 2 - 1, 6, 2);
+                                ctx.fillText(i / 2, cx + i * scale / 2 - 10, cy + 15);
+                                ctx.fillText(i / 2, cx + 10, cy - i * scale / 2 + 3);
+                            }
+                            rewritePoints(R);
+                        }
+
+                    }
+
+                    updateGraph();
+                    canvas.addEventListener("click", handleCanvasClick);
+
+                    function handleAjaxForPoint(data) {
+                        if (data.status === "success") {
                             if (fakeR) {
                                 alert("Сначала выберите значение r!");
                                 return;
                             }
-
-                            let r = parseFloat(document.getElementById("inputForm:r").value);
-
-
-                            let scale = (cx-25)/r;
-                            let x = (clickX - cx) / scale;
-                            let y = (cy - clickY) / scale;
-
-                            // Округлим на всякий
-                            let xRounded = Math.round(x * 100) / 100;
-                            let yRounded = Math.round(y * 100) / 100;
-
-                            // рисуем-с
-                            drawPoint(xRounded, yRounded, r);
-
-                            // заполняем форму
-                            var form = document.getElementById("canvasForm");
-                            form["canvasForm:xCanvas"].value = xRounded;
-                            form["canvasForm:yCanvas"].value = yRounded;
-                            form["canvasForm:rCanvas"].value = r;
-
-                            // и отправляем
-                            document.getElementById("canvasForm:canvasSubmit").click();
-                        }
-
-                        function updateGraph(R) {
-                            let cx = canvas.width / 2;
-                            let cy = canvas.height / 2;
-                            R = Number(R);
-                            fakeR = false;
-                            if (isNaN(R)){
-                                R = 1;
-                                fakeR = true;
-                            }
-                            let scale = (cx-25)/R;
-                            ctx.clearRect(0, 0, width, height);
-                            ctx.strokeStyle = 'black';
-                            ctx.lineWidth = 1;
-                            ctx.closePath();
-                            ctx.fillStyle = 'blue';
-                            // Треугольник
-                            ctx.beginPath();
-                            ctx.moveTo(cx, cy);
-                            ctx.lineTo(cx-R*scale, cy);
-                            ctx.lineTo(cx, cy+R*scale);
-                            ctx.closePath();
-                            ctx.fill();
-                            // квадрат
-                            ctx.fillRect(cx, cy, R*scale, -R/2*scale);
-                            // четверть-круг
-                            ctx.beginPath();
-                            ctx.arc(cx, cy, R/2*scale, 0, Math.PI/2, false);
-                            ctx.lineTo(cx, cy);
-                            ctx.fill();
-                            ctx.closePath();
-                            // Оси
-                            ctx.beginPath();
-                            ctx.moveTo(0, cy);
-                            ctx.lineTo(width, cy); // X
-                            ctx.moveTo(cx, 0);
-                            ctx.lineTo(cy, height); // Y
-                            ctx.stroke();
-                            // Деления шкалы
-                            ctx.fillStyle = 'black';
-                            if (fakeR){
-                                for(let i=-2*R; i<=2*R; i++) {
-                                    if(i===0) continue;
-                                    ctx.fillRect(cx + i*scale/2 - 1, cy - 3, 2, 6);
-                                    ctx.fillRect(cx - 3, cy - i*scale/2 - 1, 6, 2);
-                                    ctx.fillText(i/2+"R", cx + i*scale/2 - 10, cy + 15);
-                                    ctx.fillText(i/2+"R", cx + 10, cy - i*scale/2 + 3);
-                                }
-                            }
-                            else{
-                                for(let i=-2*R; i<=2*R; i++) {
-                                    if(i===0) continue;
-                                    ctx.fillRect(cx + i*scale/2 - 1, cy - 3, 2, 6);
-                                    ctx.fillRect(cx - 3, cy - i*scale/2 - 1, 6, 2);
-                                    ctx.fillText(i/2, cx + i*scale/2 - 10, cy + 15);
-                                    ctx.fillText(i/2, cx + 10, cy - i*scale/2 + 3);
-                                }
-                                rewritePoints(R);
-                            }
-
-                        }
-
-                        updateGraph();
-                        canvas.addEventListener("click", handleCanvasClick);
-
-                        function handleAjaxForPoint(data) {
-                            if (data.status === "success") {
-                                if (fakeR) {
-                                    alert("Сначала выберите значение r!");
-                                    return;
-                                }
-                                var form = document.getElementById("inputForm");
-                                var x = parseFloat(form["inputForm:x"].value);
-                                var y = parseFloat(form["inputForm:y"].value);
-                                var r = parseFloat(form["inputForm:rHidden"].value);
-                                if (!isNaN(x) && !isNaN(y) && !isNaN(r)) {
-                                    drawPoint(x, y, r);
-                                }
+                            var form = document.getElementById("inputForm");
+                            var x = parseFloat(form["inputForm:x"].value);
+                            var y = parseFloat(form["inputForm:y"].value);
+                            var r = parseFloat(form["inputForm:rHidden"].value);
+                            if (!isNaN(x) && !isNaN(y) && !isNaN(r)) {
+                                drawPoint(x, y, r);
                             }
                         }
+                    }
 
-                        function rewritePoints(currentR) {
-                            const table = document.getElementById('inputForm:resultsTable');
-                            if (!table) { return; }
+                    function rewritePoints(currentR) {
+                        const table = document.getElementById('inputForm:resultsTable');
+                        if (!table) {
+                            return;
+                        }
 
-                            const rows = table.tBodies[0].rows; // строки без заголовка
+                        const rows = table.tBodies[0].rows; // строки без заголовка
 
-                            for (let i = 0; i < rows.length; i++) {
-                                const cells = rows[i].cells;
+                        for (let i = 0; i < rows.length; i++) {
+                            const cells = rows[i].cells;
 
-                                const x = cells[0].textContent.trim();
-                                const y = cells[1].textContent.trim();
-                                const r = cells[2].textContent.trim();
+                            const x = cells[0].textContent.trim();
+                            const y = cells[1].textContent.trim();
+                            const r = cells[2].textContent.trim();
 
-                                if (Number(r) === Number(currentR)) {
-                                    drawPoint(x, y, r);
-                                }
+                            if (Number(r) === Number(currentR)) {
+                                drawPoint(x, y, r);
                             }
                         }
+                    }
 
 
                     //]]>
                 </script>
 
             </h:form>
+
             <!-- Ссылку, позволяющую вернуться на стартовую страницу. -->
             <h:form id="returnForm">
                 <h:link value="Вернуться на стартовую страницу"
                         outcome="toIndex"
-                        style="padding:10px 20px; font-size:16px;" />
+                        style="padding:10px 20px; font-size:16px;"/>
             </h:form>
         </div>
+
         <!--Набор компонентов для задания координат точки и
         радиуса области в соответствии с вариантом задания.
         Может потребоваться использование дополнительных библиотек
@@ -302,35 +351,35 @@
 
                 <!-- X: selectOneRadio -->
                 <h:panelGroup>
-                    <h:outputLabel for="x" value="X:" />
+                    <h:outputLabel for="x" value="X:"/>
                     <h:selectOneRadio id="x"
                                       value="#{pointBean.x}"
                                       required="true"
                                       requiredMessage="Выберите X">
-                        <f:selectItem itemLabel="-4" itemValue="-4" />
-                        <f:selectItem itemLabel="-3" itemValue="-3" />
-                        <f:selectItem itemLabel="-2" itemValue="-2" />
-                        <f:selectItem itemLabel="-1"  itemValue="-1" />
-                        <f:selectItem itemLabel="0"  itemValue="0" />
-                        <f:selectItem itemLabel="1"  itemValue="1" />
-                        <f:selectItem itemLabel="2"  itemValue="2" />
-                        <f:selectItem itemLabel="3"  itemValue="3" />
-                        <f:selectItem itemLabel="4"  itemValue="4" />
+                        <f:selectItem itemLabel="-4" itemValue="-4"/>
+                        <f:selectItem itemLabel="-3" itemValue="-3"/>
+                        <f:selectItem itemLabel="-2" itemValue="-2"/>
+                        <f:selectItem itemLabel="-1" itemValue="-1"/>
+                        <f:selectItem itemLabel="0" itemValue="0"/>
+                        <f:selectItem itemLabel="1" itemValue="1"/>
+                        <f:selectItem itemLabel="2" itemValue="2"/>
+                        <f:selectItem itemLabel="3" itemValue="3"/>
+                        <f:selectItem itemLabel="4" itemValue="4"/>
                     </h:selectOneRadio>
-                    <h:message id="xMsg" for="x" style="color: red;" />
+                    <h:message id="xMsg" for="x" style="color: red;"/>
                 </h:panelGroup>
                 <br/>
 
                 <!-- Y: inputText с валидацией -->
                 <h:panelGroup style="margin-top:10px">
-                    <h:outputLabel for="y" value="Y:" />
+                    <h:outputLabel for="y" value="Y:"/>
                     <h:inputText id="y"
                                  value="#{pointBean.y}"
                                  required="true"
                                  requiredMessage="Введите Y (от -3 до 3)"
                                  validatorMessage="Y должен входить в диапазон от -3 до 3"
                                  converterMessage="Y должен быть ЧИСЛОМ от -3 до 3">
-                        <f:validateDoubleRange minimum="-3" maximum="3" />
+                        <f:validateDoubleRange minimum="-3" maximum="3"/>
                     </h:inputText>
                     <h:message id="yMsg" for="y" style="color:red"/>
                 </h:panelGroup>
@@ -338,9 +387,9 @@
 
                 <!-- R: primefaces slider -->
                 <h:panelGroup style="margin-top:10px">
-                    <h:outputLabel value="R:" />
+                    <h:outputLabel value="R:"/>
                     <!-- Для хранения R -->
-                    <h:inputHidden id="rHidden" value="#{pointBean.r}" />
+                    <h:inputHidden id="rHidden" value="#{pointBean.r}"/>
 
                     <!-- Слайдер -->
                     <p:slider for="rHidden"
@@ -363,18 +412,60 @@
                                  id="submitBtn"
                                  action="#{pointBean.submit}"
                                  style="margin-top:15px">
-                    <f:ajax execute="@form" render="resultsTable xMsg yMsg"
+                    <f:ajax execute="@form" render="resultsTable xMsg yMsg mbeanStats"
                             onevent="handleAjaxForPoint"/>
                 </h:commandButton>
 
-                <!-- Кнопка стерка -->
+                <!-- Кнопка очистки результатов -->
                 <h:commandButton value="Очистить результаты"
                                  actionListener="#{resultsBean.clearResults}">
-                    <f:ajax render="resultsTable"/>
+                    <f:ajax render="resultsTable mbeanStats"/>
                 </h:commandButton>
 
-                <!-- Таблица со списком результатов предыдущих проверок. -->
+                <!-- Кнопка сброса статистики MBeans -->
+                <h:commandButton value="Сбросить статистику MBeans"
+                                 actionListener="#{mbeanStatsBean.resetStats}">
+                    <f:ajax render="mbeanStats"/>
+                </h:commandButton>
 
+                <!-- СТАТИСТИКА MBeans -->
+                <div class="mbean-stats" id="mbeanStats">
+                    <h3>Статистика MBeans</h3>
+
+                    <!-- Статистика PointStats -->
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="color: #333; margin: 5px 0;">Точки (PointStats)</h4>
+                        <div class="stat-row">
+                            <span class="stat-label">Всего точек:</span>
+                            <span class="stat-value">#{mbeanStatsBean.totalPoints}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Промахов:</span>
+                            <span class="stat-value miss">#{mbeanStatsBean.missPoints}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Процент попаданий:</span>
+                            <span class="stat-value" style="color: #333;">
+                                #{mbeanStatsBean.hitPercentage}%
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Статистика AverageTime -->
+                    <div>
+                        <h4 style="color: #333; margin: 5px 0;">Время (AverageTime)</h4>
+                        <div class="stat-row">
+                            <span class="stat-label">Среднее время между кликами:</span>
+                            <span class="stat-value average-time">#{mbeanStatsBean.averageTime} мс</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Количество кликов:</span>
+                            <span class="stat-value">#{mbeanStatsBean.clickCount}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Таблица со списком результатов предыдущих проверок. -->
                 <h:dataTable id="resultsTable"
                              value="#{resultsBean.results}"
                              var="res"
@@ -382,44 +473,44 @@
 
                     <h:column>
                         <f:facet name="header">X</f:facet>
-                        <h:outputText value="#{res.x}" />
+                        <h:outputText value="#{res.x}"/>
                     </h:column>
 
                     <h:column>
                         <f:facet name="header">Y</f:facet>
-                        <h:outputText value="#{res.y}" />
+                        <h:outputText value="#{res.y}"/>
                     </h:column>
 
                     <h:column>
                         <f:facet name="header">R</f:facet>
-                        <h:outputText value="#{res.r}" />
+                        <h:outputText value="#{res.r}"/>
                     </h:column>
 
                     <h:column>
                         <f:facet name="header">Попадание</f:facet>
-                        <h:outputText value="#{res.hit ? 'Да' : 'Нет'}" />
+                        <h:outputText value="#{res.hit ? 'Да' : 'Нет'}"/>
                     </h:column>
 
                     <h:column>
                         <f:facet name="header">Время сервера</f:facet>
                         <h:outputText value="#{res.serverTime}">
                             <f:convertDateTime type="localDateTime"
-                                               pattern="HH:mm:ss dd-MM-yyyy" />
+                                               pattern="HH:mm:ss dd-MM-yyyy"/>
                         </h:outputText>
                     </h:column>
 
                     <h:column>
                         <f:facet name="header">Время обработки, мс</f:facet>
-                        <h:outputText value="#{res.processingTime}" />
+                        <h:outputText value="#{res.processingTime}"/>
                     </h:column>
 
                 </h:dataTable>
 
             </h:form>
 
-            </div>
-
         </div>
 
+    </div>
+    <h:outputText value="#{mbeanStatsBean.forceRefresh}" rendered="false"/>
 </h:body>
 </html>

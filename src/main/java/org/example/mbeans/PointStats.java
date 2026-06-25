@@ -1,10 +1,12 @@
 package org.example.mbeans;
 
+import lombok.Getter;
 import org.example.mbeans.interfaces.IPointStats;
 
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
 
+@Getter
 public class PointStats extends NotificationBroadcasterSupport implements IPointStats {
 
     private int totalPoints = 0;
@@ -31,16 +33,6 @@ public class PointStats extends NotificationBroadcasterSupport implements IPoint
             sendNotification(notification);
             resetMissSequence();
         }
-    }
-
-    @Override
-    public int getTotalPoints() {
-        return totalPoints;
-    }
-
-    @Override
-    public int getMissPoints() {
-        return missPoints;
     }
 
     @Override

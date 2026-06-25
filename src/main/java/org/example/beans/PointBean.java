@@ -2,7 +2,9 @@ package org.example.beans;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.example.mbeans.MBeanConfig;
 
+import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
@@ -14,16 +16,24 @@ public class PointBean implements Serializable {
     private Double y;
     private Double r;
 
-
+    @Inject
     private ResultsBean resultsBean;
+
+    @Inject
+    private MBeanConfig mbeanConfig;
 
     public void submit() {
         long startTime = System.nanoTime();
 
-        // Проверка попадания в область
         boolean hit = checkHit(x, y, r);
 
-        // Создание результата
+        try {
+            mbeanConfig.getPointStats().addPoint(hit);
+            mbeanConfig.getAverageTime().addClick(System.currentTimeMillis());
+        } catch (Exception e) {
+            System.err.println("Error updating MBean stats: " + e.getMessage());
+        }
+
         PointResult result = new PointResult();
         result.setX(x);
         result.setY(y);

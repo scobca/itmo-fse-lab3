@@ -1,10 +1,12 @@
 package org.example.mbeans;
 
+import lombok.Getter;
 import org.example.mbeans.interfaces.IAverageTime;
 
 import javax.management.Notification;
 import javax.management.NotificationBroadcasterSupport;
 
+@Getter
 public class AverageTime extends NotificationBroadcasterSupport implements IAverageTime {
 
     private double averageTime = 0.0;
@@ -36,11 +38,6 @@ public class AverageTime extends NotificationBroadcasterSupport implements IAver
         clickCount++;
         totalTime += interval;
         averageTime = (double) totalTime / clickCount;
-    }
-
-    @Override
-    public double getAverageTime() {
-        return 0;
     }
 
     @Override
