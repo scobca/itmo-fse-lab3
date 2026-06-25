@@ -30,6 +30,14 @@ public class MBeanStatsBean implements Serializable {
         }
     }
 
+    public int getMissSequence() {
+        try {
+            return mbeanConfig.getPointStats().getMissSequence();
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
     public String getHitPercentage() {
         try {
             int total = getTotalPoints();
