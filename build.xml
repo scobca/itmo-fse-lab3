@@ -106,7 +106,7 @@
                fork="true"
                source="17"
                target="17"
-               executable="${java21.home}/bin/javac">
+               executable="${java.home}/bin/javac">
             <classpath>
                 <path refid="project.classpath"/>
                 <pathelement path="${classes.dir}"/>
@@ -117,7 +117,7 @@
                haltonfailure="yes"
                fork="yes"
                showoutput="true"
-               jvm="${java21.home}/bin/java">
+               jvm="${java.home}/bin/java">
 
             <jvmarg value="-XX:+EnableDynamicAgentLoading"/>
 
@@ -139,10 +139,6 @@
     </target>
 
     <target name="env" depends="build, compile-splash" description="Сборка и запуск в альтернативном окружении">
-        <echo message="=== Запуск в альтернативном окружении ==="/>
-        <echo message="Java Home: ${env.java.home}"/>
-        <echo message="JVM Args: ${env.jvm.args}"/>
-
         <java classname="org.example.misc.CenteredSplash" fork="true" jvm="${env.java.home}/bin/java">
             <classpath>
                 <path refid="project.classpath"/>
