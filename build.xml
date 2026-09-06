@@ -34,7 +34,8 @@
                 fork="true"
                 source="17"
                 target="17"
-                encoding="UTF-8">
+                encoding="UTF-8"
+                executable="${java.home}/bin/javac">  <!-- добавить эту строку -->
             <classpath refid="project.classpath"/>
         </javac>
 
