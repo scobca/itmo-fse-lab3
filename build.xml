@@ -4,8 +4,8 @@
     <property file="build.properties"/>
     <property environment="env"/>
 
-    <condition property="java21.home" value="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home" else="/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home">
-        <available file="/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home"/>
+    <condition property="java.home" value="/usr/local/openjdk17" else="${java.home}">
+        <available file="/usr/local/openjdk17"/>
     </condition>
 
     <taskdef resource="net/sf/antcontrib/antlib.xml">
