@@ -12,7 +12,7 @@
 | JVM System (Reference Handler, Finalizer, etc.)  | 4                     | RUNNABLE / WAITING       |
 | MSC service thread 1-x                           | 8                     | WAITING                  |
 | ServerDeploymentRepository-temp-threads          | 1                     | WAITING                  |
-| ServerService Thread Pool                        | 4 (1, 41, 80, 90, 91) | WAITING / TIMED_WAITING  |
+| ServerService Thread Pool                        | 4                     | WAITING / TIMED_WAITING  |
 | DeploymentScanner-threads                        | 2                     | WAITING / TIMED_WAITING  |
 | management I/O                                   | 2                     | RUNNABLE                 |
 | management Accept                                | 1                     | RUNNABLE                 |
@@ -412,7 +412,7 @@ SynchronousQueue.poll → ThreadPoolExecutor.getTask → ThreadPoolExecutor.runW
 
 ---
 
-### `pool-9-thread-6` (t@244) — RUNNABLE ⚠️
+### --> `pool-9-thread-6` (t@244) — RUNNABLE 
 
 **Описание:** Поток, который в момент снятия дампа **выполнял сам дамп потоков** через JMX. Виден полный стек вызова от VisualVM → JMX → `ThreadImpl.dumpAllThreads`. Это мета-поток: именно он инициировал этот thread dump.
 
