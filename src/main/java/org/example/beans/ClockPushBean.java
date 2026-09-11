@@ -15,7 +15,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 
-
 @Named
 @ApplicationScoped
 public class ClockPushBean implements Serializable {

@@ -1,26 +1,39 @@
 package org.example.beans;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.example.mbeans.MBeanConfig;
+
+import javax.inject.Inject;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@Setter
+@Getter
 public class PointBean implements Serializable {
 
     private Double x;
     private Double y;
     private Double r;
 
-
+    @Inject
     private ResultsBean resultsBean;
 
+    @Inject
+    private MBeanConfig mbeanConfig;
+
     public void submit() {
-        // System.out.println("submit() called, resultsBean = " + resultsBean);
-        // System.out.printf("x: %s y: %s r: %s%n", x, y, r);
         long startTime = System.nanoTime();
 
-        // Проверка попадания в область
         boolean hit = checkHit(x, y, r);
 
-        // Создание результата
+        try {
+            mbeanConfig.getPointStats().addPoint(hit);
+            mbeanConfig.getAverageTime().addClick(System.currentTimeMillis());
+        } catch (Exception e) {
+            System.err.println("Error updating MBean stats: " + e.getMessage());
+        }
+
         PointResult result = new PointResult();
         result.setX(x);
         result.setY(y);
@@ -40,36 +53,6 @@ public class PointBean implements Serializable {
         if (x >= 0 && y >= 0 && x <= r && y <= r/2) return true;
 
         // Четверть круга
-        if (x >= 0 && y <= 0 && (x*x + y*y <= r*r/4)) return true;
-
-        return false;
+        return x >= 0 && y <= 0 && (x * x + y * y <= r * r / 4);
     }
-
-    // геттеры/сеттеры + setter для resultsBean
-
-    public Double getX() {
-        return x;
-    }
-    public void setX(Double x) {
-        this.x = x;
-    }
-
-    public Double getY() {
-        return y;
-    }
-    public void setY(Double y) {
-        this.y = y;
-    }
-
-    public Double getR() {
-        return r;
-    }
-    public void setR(Double r) {
-        this.r = r;
-    }
-
-    public void setResultsBean(ResultsBean resultsBean) {
-        this.resultsBean = resultsBean;
-    }
-
 }

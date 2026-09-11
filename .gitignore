@@ -43,5 +43,8 @@ build/
 
 build
 dist
+out
+.idea
+wildfly
 
 deploy.properties
